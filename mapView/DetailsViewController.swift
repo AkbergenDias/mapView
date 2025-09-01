@@ -7,6 +7,7 @@
 
 import UIKit
 import MapKit
+import SDWebImage
 
 class DetailsViewController: UIViewController {
     var place: Place?
@@ -28,8 +29,12 @@ class DetailsViewController: UIViewController {
         }
         
         titleLabel?.text = place.title
-        descriptionLabel?.text = place.description
-        imageView?.image = UIImage(named: place.image)
+        descriptionLabel?.text = place.details
+        
+        
+        if let url = URL(string: place.image) {
+            imageView.sd_setImage(with: url, placeholderImage: UIImage(named: "placeholder"))
+        }
         imageView?.clipsToBounds = true
         
         let coord = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)

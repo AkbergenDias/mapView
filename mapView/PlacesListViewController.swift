@@ -6,34 +6,45 @@
 //
 
 import UIKit
+import SDWebImage
+import Foundation
+import Alamofire
+import SwiftyJSON
+import SVProgressHUD
+
 class PlacesListViewController: UITableViewController {
-    
-    var places: [Place] = [
-        Place(title: "Holland", subtitle: "Luxury by the sea",
-              latitude: 43.2389, longitude: 76.8897,
-              description: "Spacious rooms, spa, and oceanfront location.", image: "Holland"),
 
-        Place(title: "Auezov city", subtitle: "Cozy rooms, great view",
-              latitude: 43.2365, longitude: 76.9090,
-              description: "Cozy inn with mountain views and complimentary breakfast.", image: "Auezov_city"),
-
-        Place(title: "Legenda", subtitle: "Budget friendly stay",
-              latitude: 43.2220, longitude: 76.8512,
-              description: "Budget beds near downtown and public transit.", image: "Legenda"),
-
-        Place(title: "Lamiya", subtitle: "Budget friendly stay",
-              latitude: 43.2250, longitude: 76.9200,
-              description: "Budget beds near downtown and public transit.", image: "Lamiya")
-    ]
     var delegate: ViewController?
+    var places: [Place] = []
     
-    
-    
+    func loadData() {
+        let url = "https://demo8845027.mockable.io/places"
+        
+        SVProgressHUD.show()
+        AF.request(url, method: .get).responseData
+        { response in
+            SVProgressHUD.dismiss()
+            
+            if response.response?.statusCode == 200 {
+                let json = JSON(response.data!)
+                
+                print(json)
+                
+                if let resultArray = json.array {
+                    for item in resultArray {
+                        let placeItem = Place(json: item)
+                        self.places.append(placeItem)
+                    }
+                    self.tableView.reloadData()
+                }
+            }
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         self.title = "Hotels & Places"
+        loadData()
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -58,13 +69,21 @@ class PlacesListViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "PlaceCell", for: indexPath)
         cell.textLabel?.text = place.title
         cell.detailTextLabel?.text = place.subtitle
-        if let raw = UIImage(named: place.image) {
-            let thumb = resizedImage(raw, targetSize: CGSize(width: 60, height: 60))
-            cell.imageView?.image = thumb
-        } else {
-            cell.imageView?.image = nil
-        }
-        cell.imageView?.contentMode = .scaleAspectFill
+        
+        let imageSize = CGSize(width: 80, height: 80)
+        
+        cell.imageView?.sd_setImage(
+                with: URL(string: place.image),
+                placeholderImage: UIImage(named: "placeholder"),
+                options: [],
+                completed: { image, _, _, _ in
+                    if let image = image {
+                        let resized = image.sd_resizedImage(with: imageSize, scaleMode: .aspectFill)
+                        cell.imageView?.image = resized
+                        cell.setNeedsLayout()
+                    }
+                }
+            )
         cell.imageView?.clipsToBounds = true
         cell.imageView?.layer.cornerRadius = 6
         return cell
