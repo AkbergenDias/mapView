@@ -28,7 +28,6 @@ class ViewController: UIViewController, CLLocationManagerDelegate, UIGestureReco
         // Do any additional setup after loading the view.
         if let place = place {
             let dest = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
-            drawRoute(to: dest)
         }
         
         // Запрашиваем разрешение на использование местоположения пользователя
@@ -86,27 +85,21 @@ class ViewController: UIViewController, CLLocationManagerDelegate, UIGestureReco
     // Вызывается каждый раз при изменении местоположения нашего пользователя
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         
-        userLocation = CLLocation(latitude: 43.2389, longitude: 76.8897)
+        userLocation = CLLocation(latitude: 37.7749, longitude: -122.4194)
         
         print(userLocation)
         print("Updated user location:", userLocation.coordinate.latitude, userLocation.coordinate.longitude)
         
         if followMe {
-            // Дельта - насколько отдалиться от координат пользователя по долготе и широте
-            let latDelta:CLLocationDegrees = 0.01
-            let longDelta:CLLocationDegrees = 0.01
-            
-            // Создаем область шириной и высотой по дельте
-            let span = MKCoordinateSpan(latitudeDelta: latDelta, longitudeDelta: longDelta)
-            
-            // Создаем регион на карте с моими координатоми в центре
-            let region = MKCoordinateRegion(center: userLocation.coordinate,
-                                            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
-            self.mapview.setRegion(region, animated: true)
-            
-            // Приближаем карту с анимацией в данный регион
-            mapview.setRegion(region, animated: true)
+            let span = MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                    let region = MKCoordinateRegion(center: userLocation.coordinate, span: span)
+                    mapview.setRegion(region, animated: true)
         }
+        
+        if let place = place {
+                let dest = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
+                drawRoute(to: dest)
+            }
     }
     
     @IBAction func showMyLocation(_ sender: Any) {
@@ -146,5 +139,15 @@ class ViewController: UIViewController, CLLocationManagerDelegate, UIGestureReco
                 animated: true
             )
         }
+    }
+    
+    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+        if let polyline = overlay as? MKPolyline {
+            let renderer = MKPolylineRenderer(polyline: polyline)
+            renderer.strokeColor = .systemBlue
+            renderer.lineWidth = 4
+            return renderer
+        }
+        return MKOverlayRenderer()
     }
 }
