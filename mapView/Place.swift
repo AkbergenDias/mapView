@@ -15,6 +15,7 @@ struct Place: Codable {
     var longitude: Double = 0.0
     var details: String = ""
     var image: String = ""
+    var rating: Double = 0.0
 
     init(json: JSON) {
         if let item = json["title"].string {

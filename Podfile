@@ -8,4 +8,5 @@ target 'mapView' do
 
   pod 'Alamofire'
   pod 'SwiftyJSON'
+  pod 'Cosmos', '~> 25.0'
 end

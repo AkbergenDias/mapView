@@ -8,7 +8,11 @@
 import UIKit
 import MapKit
 
-class ViewController: UIViewController, CLLocationManagerDelegate, UIGestureRecognizerDelegate, MKMapViewDelegate {
+protocol RouteDelegate: AnyObject {
+    func didSelectPlace(_ place: Place)
+}
+
+class ViewController: UIViewController, CLLocationManagerDelegate, UIGestureRecognizerDelegate, MKMapViewDelegate, RouteDelegate {
     @IBOutlet weak var mapview: MKMapView!
     var place: Place?
     
@@ -149,5 +153,11 @@ class ViewController: UIViewController, CLLocationManagerDelegate, UIGestureReco
             return renderer
         }
         return MKOverlayRenderer()
+    }
+    
+    func didSelectPlace(_ place: Place) {
+        self.place = place
+        let dest = CLLocationCoordinate2D(latitude: place.latitude, longitude: place.longitude)
+        drawRoute(to: dest)
     }
 }

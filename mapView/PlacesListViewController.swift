@@ -11,11 +11,13 @@ import Foundation
 import Alamofire
 import SwiftyJSON
 import SVProgressHUD
+import Cosmos
 
 class PlacesListViewController: UITableViewController {
 
-    var delegate: ViewController?
+    weak var delegate: RouteDelegate?
     var places: [Place] = []
+    var ratings: [String: Double] = [:]
     
     func loadData() {
         let url = "https://demo8845027.mockable.io/places"
@@ -50,7 +52,11 @@ class PlacesListViewController: UITableViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if let details = segue.destination as? DetailsViewController,
            let indexPath = tableView.indexPathForSelectedRow {
-            details.place = places[indexPath.row]
+            
+            let place = places[indexPath.row]
+            details.place = place
+            details.delegate = self
+            details.currentRating = ratings[place.title] ?? 0
         }
     }
     private func resizedImage(_ image: UIImage, targetSize: CGSize) -> UIImage {
@@ -86,11 +92,29 @@ class PlacesListViewController: UITableViewController {
             )
         cell.imageView?.clipsToBounds = true
         cell.imageView?.layer.cornerRadius = 6
+        
+        let cosmosView = CosmosView()
+        cosmosView.settings.updateOnTouch = false
+        cosmosView.rating = ratings[place.title] ?? 0
+        cosmosView.settings.starSize = 20
+        cosmosView.settings.fillMode = .half
+        cosmosView.settings.filledColor = .systemYellow
+        
+        cell.accessoryView = cosmosView
         return cell
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let place = places[indexPath.row]
         print("Selected:", place.title, place.latitude, place.longitude)
+        delegate?.didSelectPlace(place)
+    }
+}
+extension PlacesListViewController: PlaceDetailsDelegate {
+    func didUpdateRating(for place: Place, rating: Double) {
+        ratings[place.title] = rating
+        if let index = places.firstIndex(where: { $0.title == place.title }) {
+            tableView.reloadRows(at: [IndexPath(row: index, section: 0)], with: .automatic)
+        }
     }
 }
